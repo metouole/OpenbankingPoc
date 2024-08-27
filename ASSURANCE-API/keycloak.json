@@ -1,0 +1,14 @@
+{
+    "realm": "mobilebank",
+    "auth-server-url": "http://localhost:8181/",
+    "ssl-required": "external",
+    "resource": "Appec2lt",
+    "verify-token-audience": false,
+    "credentials": {
+      "secret": "TQ3wAjQpv2JuYzJFNTPbKp8DrNkeYmWU"
+    },
+    "confidential-port": 0,
+    "policy-enforcer": {
+      "credentials": {}
+    }
+  }

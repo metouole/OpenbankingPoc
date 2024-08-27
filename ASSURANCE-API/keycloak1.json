@@ -1,0 +1,10 @@
+{
+    "realm": "mobilebank",
+    "auth-server-url": "http://localhost:8181/",
+    "ssl-required": "external",
+    "resource": "fintech-credit",
+    "public-client": true,
+    "verify-token-audience": true,
+    "use-resource-role-mappings": true,
+    "confidential-port": 0
+  }

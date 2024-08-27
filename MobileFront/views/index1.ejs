@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fintech Account Aggregator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    #data, #transactionHistory, #transactionResult, .error-message {
+      white-space: pre-wrap;
+      background-color: #f4f4f4;
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+    button, a {
+      padding: 10px 15px;
+      text-decoration: none;
+      color: white;
+      background-color: #007BFF;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+      display: inline-block;
+    }
+    button:hover, a:hover {
+      background-color: #0056b3;
+    }
+    .error-message {
+      color: red;
+      background-color: #ffdada;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>New Financial Institution</h1>
+  </header>
+  <section>
+    <h2>Debug Information:</h2>
+    <p>Authenticated: <%= authenticated %></p>
+    <p>Realm: <%= realm %></p>
+    <p>User: <%= JSON.stringify(user) %></p>
+
+    <% if (authenticated) { %>
+      <h2>Authenticated View:</h2>
+      <p>Logged in as <%= user ? user.preferred_username : 'Unknown User' %></p>
+      <p>Your Token:</p>
+      <pre><%= token %></pre>
+      <button id="fetchDataBtn">Fetch Customer Data</button>
+      <button id="fetchTransactionHistoryBtn">Fetch Transaction History</button>
+      <button id="initiateTransactionBtn">Initiate Transaction</button>
+      <a href="/logout?realm=<%= realm %>">Logout</a>
+      <div id="data"></div>
+      <div id="transactionHistory"></div>
+      <div id="transactionResult"></div>
+    <% } else { %>
+      <h2>Login Options:</h2>
+      <% ['mobilebank', 'piggybank', 'microfinance', 'assurance'].forEach(function(realmOption) { %>
+        <a href="/login?realm=<%= encodeURIComponent(realmOption) %>">Connect with <%= realmOption.charAt(0).toUpperCase() + realmOption.slice(1) %></a><br>
+      <% }); %>
+    <% } %>
+  </section>
+
+
+  <script>
+    document.getElementById('fetchDataBtn').addEventListener('click', () => {
+      fetch('/fetch-data', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer <%= token %>`
+        },
+        credentials: 'include'
+      })
+        .then(response => response.json())
+        .then(data => {
+          const preformattedText = document.createElement('pre');
+          preformattedText.textContent = JSON.stringify(data, null, 2);
+          document.getElementById('data').innerHTML = '';
+          document.getElementById('data').appendChild(preformattedText);
+        })
+        .catch(error => {
+          console.error('Error fetching data:', error);
+          document.getElementById('data').textContent = 'Error fetching data: ' + error.message;
+        });
+    });
+
+    document.getElementById('fetchTransactionHistoryBtn').addEventListener('click', () => {
+      fetch('/fetch-transaction-history')
+        .then(response => response.json())
+        .then(data => {
+          const preformattedText = document.createElement('pre');
+          preformattedText.textContent = JSON.stringify(data, null, 2);
+          document.getElementById('transactionHistory').innerHTML = '';
+          document.getElementById('transactionHistory').appendChild(preformattedText);
+        })
+        .catch(error => {
+          console.error('Error fetching transaction history:', error);
+          document.getElementById('transactionHistory').textContent = 'Error fetching transaction history';
+        });
+    });
+
+    document.getElementById('initiateTransactionBtn').addEventListener('click', () => {
+      const id = prompt('Enter Transaction ID:');
+      const amount = prompt('Enter Amount:');
+      
+      if (id && amount) {
+        fetch('/initiate-transaction', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer <%= token %>`
+          },
+          body: JSON.stringify({ id, amount })
+        })
+        .then(response => response.json())
+        .then(data => {
+          const preformattedText = document.createElement('pre');
+          preformattedText.textContent = JSON.stringify(data, null, 2);
+          document.getElementById('transactionResult').innerHTML = '';
+          document.getElementById('transactionResult').appendChild(preformattedText);
+        })
+        .catch(error => {
+          console.error('Error initiating transaction:', error);
+          document.getElementById('transactionResult').textContent = 'Error initiating transaction';
+        });
+      }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      fetch('/logout')
+        .then(() => {
+          window.location.href = '/';
+        })
+        .catch(error => {
+          console.error('Error logging out:', error);
+        });
+    });
+
+
+    function fetchAndDisplay(url, elementId) {
+      fetch(url)
+        .then(handleResponse)
+        .then(data => displayData(data, elementId))
+        .catch(error => displayError(error, elementId));
+    }
+
+    function handleResponse(response) {
+      if (!response.ok) throw new Error('Failed to fetch');
+      return response.json();
+    }
+
+    function displayData(data, elementId) {
+      const preformattedText = document.createElement('pre');
+      preformattedText.textContent = JSON.stringify(data, null, 2);
+      document.getElementById(elementId).innerHTML = '';
+      document.getElementById(elementId).appendChild(preformattedText);
+    }
+
+    function displayError(error, elementId) {
+      const errorDiv = document.createElement('div');
+      errorDiv.textContent = error.message || 'An error occurred';
+      errorDiv.className = 'error-message';
+      document.getElementById(elementId).innerHTML = '';
+      document.getElementById(elementId).appendChild(errorDiv);
+    }
+  </script>
+</body>
+</html>

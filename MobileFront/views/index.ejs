@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Keycloak EJS Example</title>
+  <link rel="stylesheet" href="styles.css"> <!-- Assuming you have a styles.css file -->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    #data, #transactionHistory, #transactionResult {
+      white-space: pre-wrap;
+      background-color: #f4f4f4;
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+    button, a {
+      padding: 10px 15px;
+      text-decoration: none;
+      color: white;
+      background-color: #007BFF;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+      display: inline-block;
+    }
+    button:hover, a:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Keycloak EJS Example</h1>
+  </header>
+  <section>
+    <% if (user) { %>
+      <p>Logged in as <%= user.preferred_username %></p>
+      <p>Your Token:</p>
+      <pre><%= token %></pre>
+      
+      <!-- Buttons for fetching data and initiating transaction -->
+      <button id="fetchDataBtn">Fetch Customer Data</button>
+      <button id="fetchTransactionHistoryBtn">Fetch Transaction History</button>
+      <button id="initiateTransactionBtn">Initiate Transaction</button>
+      <button id="logoutBtn">Logout</button>
+      
+      <!-- Divs to display results -->
+      <div id="data"></div>
+      <div id="transactionHistory"></div>
+      <div id="transactionResult"></div>
+    <% } else { %>
+      <a href="/login?realm=mobile-money">Connect with My Mobile Money Account</a>
+      <a href="/login?realm=piggybank">Connect with My Piggybank</a>
+      <a href="/login?realm=microfinance">Connect with My Microfinance Account</a>
+      <a href="/login?realm=assurance">Connect with My Assurance Account</a>
+
+    <% } %>
+  </section>
+
+  <script>
+    document.getElementById('fetchDataBtn').addEventListener('click', () => {
+      fetch('/fetch-data')
+        .then(response => response.json())
+        .then(data => {
+          const preformattedText = document.createElement('pre');
+          preformattedText.textContent = JSON.stringify(data, null, 2);
+          document.getElementById('data').innerHTML = '';
+          document.getElementById('data').appendChild(preformattedText);
+        })
+        .catch(error => {
+          console.error('Error fetching data:', error);
+          document.getElementById('data').textContent = 'Error fetching data';
+        });
+    });
+
+    document.getElementById('fetchTransactionHistoryBtn').addEventListener('click', () => {
+      fetch('/fetch-transaction-history')
+        .then(response => response.json())
+        .then(data => {
+          const preformattedText = document.createElement('pre');
+          preformattedText.textContent = JSON.stringify(data, null, 2);
+          document.getElementById('transactionHistory').innerHTML = '';
+          document.getElementById('transactionHistory').appendChild(preformattedText);
+        })
+        .catch(error => {
+          console.error('Error fetching transaction history:', error);
+          document.getElementById('transactionHistory').textContent = 'Error fetching transaction history';
+        });
+    });
+
+    document.getElementById('initiateTransactionBtn').addEventListener('click', () => {
+      const id = prompt('Enter Transaction ID:');
+      const amount = prompt('Enter Amount:');
+      
+      if (id && amount) {
+        fetch('/initiate-transaction', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer <%= token %>`
+          },
+          body: JSON.stringify({ id, amount })
+        })
+        .then(response => response.json())
+        .then(data => {
+          const preformattedText = document.createElement('pre');
+          preformattedText.textContent = JSON.stringify(data, null, 2);
+          document.getElementById('transactionResult').innerHTML = '';
+          document.getElementById('transactionResult').appendChild(preformattedText);
+        })
+        .catch(error => {
+          console.error('Error initiating transaction:', error);
+          document.getElementById('transactionResult').textContent = 'Error initiating transaction';
+        });
+      }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      fetch('/logout')
+        .then(() => {
+          window.location.href = '/';
+        })
+        .catch(error => {
+          console.error('Error logging out:', error);
+        });
+    });
+  </script>
+</body>
+</html>

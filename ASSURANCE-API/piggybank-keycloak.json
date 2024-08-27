@@ -1,0 +1,8 @@
+{
+    "realm": "piggybank",
+    "auth-server-url": "http://localhost:8181/",
+    "ssl-required": "external",
+    "resource": "fintech-credit",
+    "public-client": true,
+    "confidential-port": 0
+  }
